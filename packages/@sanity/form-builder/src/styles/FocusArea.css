@@ -1,0 +1,9 @@
+.root {
+  outline: none;
+  @nest &:focus {
+    outline: 1px dotted #008fd8;
+  }
+  @nest &:active {
+    outline-color: #fffdb9;
+  }
+}

@@ -1,3 +1,4 @@
+
 import PropTypes from 'prop-types'
 import React from 'react'
 import FormBuilderPropTypes from '../FormBuilderPropTypes'
@@ -23,6 +24,14 @@ export default class StringInput extends React.PureComponent {
     this.props.onChange(PatchEvent.from(value ? set(value) : unset()))
   }
 
+  focus() {
+    this._input.focus()
+  }
+
+  setInput = input => {
+    this._input = input
+  }
+
   render() {
     const {value, type, level, ...rest} = this.props
 
@@ -39,6 +48,7 @@ export default class StringInput extends React.PureComponent {
           readOnly={type.readOnly}
           placeholder={type.placeholder}
           onChange={this.handleChange}
+          ref={this.setInput}
         />
       </FormField>
     )

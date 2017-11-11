@@ -6,48 +6,42 @@ import type {Node} from 'react'
 import styles from './styles/ItemValue.css'
 import ConfirmButton from './ConfirmButton'
 import LinkIcon from 'part:@sanity/base/link-icon'
-import Button from 'part:@sanity/components/buttons/default'
 import TrashIcon from 'part:@sanity/base/trash-icon'
 import EditItemFold from 'part:@sanity/components/edititem/fold'
 import EditItemPopOver from 'part:@sanity/components/edititem/popover'
 import FullscreenDialog from 'part:@sanity/components/dialogs/fullscreen'
-import PopOver from 'part:@sanity/components/dialogs/popover'
-
-import ItemForm from './ItemForm'
-import MemberValue from '../../Member'
+import {FormBuilderInput} from '../../FormBuilderInput'
 import PatchEvent from '../../PatchEvent'
 import Preview from '../../Preview'
 
 import {DragHandle} from 'part:@sanity/components/lists/sortable'
 import {IntentLink} from 'part:@sanity/base/router'
 import {resolveTypeName} from '../../utils/resolveTypeName'
+import type {Path} from '../../typedefs/path'
+import type {Type} from '../../typedefs'
 
 type Props = {
   type: ArrayType,
   value: ItemValue,
   level: number,
-  layout: 'media' | 'default',
+  layout?: 'media' | 'default',
   onRemove: (ItemValue) => void,
-  onChange: (PatchEvent, ItemValue) => void,
+  onChange: (PatchEvent) => void,
+  onFocus: (Path, ItemValue) => void,
+  onBlur: void => void,
   onEditStart: (ItemValue) => void,
   onEditStop: (ItemValue) => void,
-  isEditing: boolean
+  focusPath: Path,
+  isExpanded: boolean
 }
 
-export default class Item extends React.Component<Props> {
+export default class RenderItemValue extends React.Component<Props> {
 
-  domElement: ?HTMLElement
-
-  state = {
-    showConfirmDialog: false
+  static defaultProps = {
+    level: 0
   }
 
-  handleRemove = () => {
-    const {onRemove, value} = this.props
-    onRemove(value)
-  }
-
-  handleEditStart = () => {
+  handleEditStart = event => {
     const {value, onEditStart} = this.props
     onEditStart(value)
   }
@@ -65,6 +59,16 @@ export default class Item extends React.Component<Props> {
     }
   }
 
+  handleRemove = () => {
+    const {onRemove, value} = this.props
+    onRemove(value)
+  }
+
+  handleChange = (event: PatchEvent) => {
+    const {onChange, value} = this.props
+    onChange(event, value)
+  }
+
   getMemberType(): ?Type {
     const {value, type} = this.props
     const itemTypeName = resolveTypeName(value)
@@ -72,7 +76,7 @@ export default class Item extends React.Component<Props> {
   }
 
   renderEditItemForm(item: ItemValue): Node {
-    const {type, onChange, onRemove} = this.props
+    const {type, focusPath, onFocus, onBlur} = this.props
     const options = type.options || {}
 
     const memberType = this.getMemberType() || {}
@@ -81,18 +85,18 @@ export default class Item extends React.Component<Props> {
     const level = options.editModal === 'fullscreen' ? 1 : this.props.level + 1
 
     const content = (
-      <MemberValue path={{_key: item._key}}>
-        <ItemForm
-          autoFocus
-          itemKey={item._key}
-          type={memberType}
-          level={level}
-          value={item}
-          onChange={onChange}
-          onRemove={onRemove}
-        />
-      </MemberValue>
+      <FormBuilderInput
+        type={memberType}
+        level={level}
+        value={item}
+        onChange={this.handleChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        focusPath={focusPath}
+        path={[{_key: item._key}]}
+      />
     )
+    // return content
 
     if (options.editModal === 'fullscreen') {
       return (
@@ -121,30 +125,8 @@ export default class Item extends React.Component<Props> {
     )
   }
 
-  componentDidUpdate(prevProps: Props) {
-    if (this.domElement && prevProps.isEditing && !this.props.isEditing) {
-      this.domElement.focus()
-    }
-  }
-
-  setElement = (el: ?HTMLElement) => {
-    this.domElement = el
-  }
-
-  handleDeleteButtonClick = event => {
-    this.setState({
-      showConfirmDialog: true
-    })
-  }
-
-  handleConfirmDialogClose = event => {
-    this.setState({
-      showConfirmDialog: false
-    })
-  }
-
   render() {
-    const {value, type, isEditing} = this.props
+    const {value, isExpanded, type} = this.props
 
     const options = type.options || {}
     const isGrid = options.layout === 'grid'
@@ -185,41 +167,23 @@ export default class Item extends React.Component<Props> {
               )
             }
             {!type.readOnly && (
-              <Button
+              <ConfirmButton
                 tabIndex={0}
                 kind="simple"
                 color="danger"
                 icon={TrashIcon}
                 title="Delete"
-                onClick={this.handleDeleteButtonClick}
+                onClick={this.handleRemove}
               >
-                <div className={styles.popoverAnchor}>
-                  {
-                    this.state.showConfirmDialog && (
-                      <PopOver
-                        color="danger"
-                        useOverlay={false}
-                        onClose={this.handleConfirmDialogClose}
-                      >
-                        <Button
-                          kind="simple"
-                          onClick={this.handleRemove}
-                          icon={TrashIcon}
-                        >
-                          Confirm delete
-                        </Button>
-                      </PopOver>
-                    )
-                  }
-                </div>
-              </Button>
+                {doConfirm => doConfirm && 'Confirm delete'}
+              </ConfirmButton>
             )}
           </div>
         </div>
         <div
           className={options.editModal === 'fold' ? styles.editRootFold : styles.editRoot}
         >
-          {isEditing && this.renderEditItemForm(value)}
+          {isExpanded && this.renderEditItemForm(value)}
         </div>
       </div>
     )

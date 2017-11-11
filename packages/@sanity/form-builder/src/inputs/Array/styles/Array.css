@@ -3,6 +3,8 @@
 .root {
   display: block;
   position: relative;
+  margin: -0.8em;
+  padding: 1em;
 }
 
 .list {

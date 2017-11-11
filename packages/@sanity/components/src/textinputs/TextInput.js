@@ -2,22 +2,9 @@ import PropTypes from 'prop-types'
 import React from 'react'
 import CloseIcon from 'part:@sanity/base/close-icon'
 import classNames from 'classnames'
+import defaultStyles from 'part:@sanity/components/textinputs/default-style'
 
 const NOOP = () => {}
-
-const VALID_TYPES = [
-  'color',
-  'date',
-  'email',
-  'month',
-  'password',
-  'search',
-  'tel',
-  'text',
-  'number',
-  'url',
-  'week',
-]
 
 export default class DefaultTextInput extends React.PureComponent {
   static propTypes = {
@@ -25,7 +12,7 @@ export default class DefaultTextInput extends React.PureComponent {
       PropTypes.string,
       PropTypes.number
     ]),
-    type: PropTypes.oneOf(VALID_TYPES),
+    type: PropTypes.string,
     onClear: PropTypes.func,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
@@ -76,7 +63,11 @@ export default class DefaultTextInput extends React.PureComponent {
     this._input.select()
   }
 
-  setInputElement = element => {
+  focus = () => {
+    this._input.focus()
+  }
+
+  setInput = element => {
     this._input = element
   }
 
@@ -93,9 +84,14 @@ export default class DefaultTextInput extends React.PureComponent {
       isClearable,
       disabled,
       isSelected,
-      styles,
+      styles: passedStyles,
       ...rest
     } = this.props
+
+    const styles = {
+      ...defaultStyles,
+      ...passedStyles
+    }
 
     return (
       <div
@@ -106,7 +102,7 @@ export default class DefaultTextInput extends React.PureComponent {
         ])}
       >
         <input
-          ref={this.setInputElement}
+          ref={this.setInput}
           {...rest}
           className={classNames(styles.input, [hasError && styles.inputOnError])}
           disabled={disabled}
