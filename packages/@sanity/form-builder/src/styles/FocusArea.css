@@ -1,7 +1,20 @@
+@import 'part:@sanity/base/theme/variables-style';
+
 .root {
+  border: 1px solid transparent;
+  color: var(--input-color);
+  display: block;
+  width: 100%;
   outline: none;
+  font-size: inherit;
+  box-sizing: border-box;
+  border-radius: var(--input-border-radius);
+  background-color: var(--input-bg);
+  box-shadow: 0 0 4px color(#000 a(5%));
+  transition: all 0.1s linear;
   @nest &:focus {
-    outline: 1px dotted #008fd8;
+    border: 1px solid var(--input-border-color-focus);
+    box-shadow: 0 0 8px color(var(--input-border-color-focus) a(35%));
   }
   @nest &:active {
     outline-color: #fffdb9;

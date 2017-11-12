@@ -96,9 +96,14 @@ export default class DateInput extends React.Component<Props, State> {
   unset() {
     this.props.onChange(PatchEvent.from([unset()]))
   }
-
+  focus() {
+    this._datepicker.input.focus()
+  }
+  setDatePicker = datePicker => {
+    this._datepicker = datePicker
+  }
   render() {
-    const {value, type, level} = this.props
+    const {value, type, level, ...rest} = this.props
     const {inputValue} = this.state
     const {title, description, readOnly} = type
 
@@ -121,6 +126,7 @@ export default class DateInput extends React.Component<Props, State> {
             <div className={styles.root}>
               <DatePicker
                 {...options}
+                {...rest}
                 showMonthDropdown
                 showYearDropdown
                 todayButton={options.calendarTodayLabel}
@@ -137,6 +143,7 @@ export default class DateInput extends React.Component<Props, State> {
                 timeFormat={options.timeFormat}
                 timeIntervals={options.timeStep}
                 onBlur={this.handleBlur}
+                ref={this.setDatePicker}
               />
             </div>
           )}

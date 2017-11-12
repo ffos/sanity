@@ -37,7 +37,9 @@ export default class Fieldset extends React.Component {
   }
 
   handleToggle = () => {
-    this.setState(prevState => ({isOpen: !prevState.isOpen}))
+    if (this.props.collapsable) {
+      this.setState(prevState => ({isOpen: !prevState.isOpen}))
+    }
   }
 
   render() {

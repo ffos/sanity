@@ -1,12 +1,14 @@
-import type {Node} from 'react'
 // @flow
+import type {Node} from 'react'
 import React from 'react'
 import cx from 'classnames'
 import styles from './styles/FocusArea.css'
+import type {Path} from './typedefs/path'
 
 type Props = {
   children: Node,
-  className: string
+  className: string,
+  onFocus: ?(Path => void)
 }
 
 export class FocusArea extends React.Component<Props> {
@@ -18,13 +20,17 @@ export class FocusArea extends React.Component<Props> {
     }
   }
 
-  handleFocus = event => {
-    if (event.target === this._element) {
-      console.log('Me!')
-      this.props.onFocus(event)
-    } else {
-      console.log('Not me')
+  handleFocus = (event: SyntheticEvent<HTMLDivElement>) => {
+    const {onFocus} = this.props
+    // Only care about focus events from children
+    if (onFocus && this._element && event.target === this._element) {
+      onFocus(event)
     }
+  }
+
+  setElement = (element: ?HTMLDivElement) => {
+    // Only care about focus events from children
+    this._element = element
   }
 
   render() {
@@ -32,12 +38,10 @@ export class FocusArea extends React.Component<Props> {
     const classNames = cx(className, styles.root)
     return (
       <div
-        {...rest}
         tabIndex={0}
+        {...rest}
         className={classNames}
-        ref={el => {
-          this._element = el
-        }}
+        ref={this.setElement}
         onFocus={this.handleFocus}
       >
         {children}

@@ -19,6 +19,8 @@ import {IntentLink} from 'part:@sanity/base/router'
 import {resolveTypeName} from '../../utils/resolveTypeName'
 import type {Path} from '../../typedefs/path'
 import type {Type} from '../../typedefs'
+import {FocusArea} from '../../FocusArea'
+import * as PathUtils from '../../utils/pathUtils'
 
 type Props = {
   type: ArrayType,
@@ -26,13 +28,18 @@ type Props = {
   level: number,
   layout?: 'media' | 'default',
   onRemove: (ItemValue) => void,
-  onChange: (PatchEvent) => void,
-  onFocus: (Path, ItemValue) => void,
+  onChange: (PatchEvent, ItemValue) => void,
+  onFocus: (Path) => void,
   onBlur: void => void,
-  onEditStart: (ItemValue) => void,
-  onEditStop: (ItemValue) => void,
-  focusPath: Path,
-  isExpanded: boolean
+  focusPath: Path
+}
+
+function last(arr) {
+  return arr[arr.length - 1]
+}
+
+function pathSegmentFrom(value) {
+  return {_key: value._key}
 }
 
 export default class RenderItemValue extends React.Component<Props> {
@@ -41,21 +48,43 @@ export default class RenderItemValue extends React.Component<Props> {
     level: 0
   }
 
+  componentDidMount() {
+    const {focusPath, value} = this.props
+    const lastSegment = last(focusPath)
+    if (value && lastSegment && PathUtils.isSegmentEqual(lastSegment, pathSegmentFrom(value))) {
+      this.focus()
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    const prevSegment = pathSegmentFrom(prevProps.value)
+    const prevLast = last(prevProps.focusPath || [])
+    const currentSegment = pathSegmentFrom(this.props.value)
+    const currentLast = last(this.props.focusPath)
+
+    const hadFocus = PathUtils.isSegmentEqual(prevLast, prevSegment)
+    const hasFocus = PathUtils.isSegmentEqual(currentLast, currentSegment)
+    if (!hadFocus && hasFocus) {
+      this.focus()
+    }
+  }
+
   handleEditStart = event => {
-    const {value, onEditStart} = this.props
-    onEditStart(value)
+    this.setFocus(['*'])
+  }
+
+  handleFocus = () => {
+    this.setFocus()
   }
 
   handleEditStop = () => {
-    const {value, onEditStop} = this.props
-    onEditStop(value)
+    this.setFocus()
   }
 
   handleKeyPress = (event: SyntheticKeyboardEvent<*>) => {
-    const {value, onEditStart} = this.props
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
-      onEditStart(value)
+      this.setFocus(['*'])
     }
   }
 
@@ -73,6 +102,19 @@ export default class RenderItemValue extends React.Component<Props> {
     const {value, type} = this.props
     const itemTypeName = resolveTypeName(value)
     return type.of.find(memberType => memberType.name === itemTypeName)
+  }
+
+  setFocus(path: Path = []) {
+    const {value, onFocus} = this.props
+    onFocus([{_key: value._key}, ...path])
+  }
+
+  focus() {
+    this._focusArea.focus()
+  }
+
+  setFocusArea = (el: FocusArea) => {
+    this._focusArea = el
   }
 
   renderEditItemForm(item: ItemValue): Node {
@@ -126,12 +168,14 @@ export default class RenderItemValue extends React.Component<Props> {
   }
 
   render() {
-    const {value, isExpanded, type} = this.props
+    const {value, focusPath, type} = this.props
 
     const options = type.options || {}
     const isGrid = options.layout === 'grid'
     const isSortable = options.sortable !== false
     const previewLayout = isGrid ? 'media' : 'default'
+
+    const isExpanded = PathUtils.isExpanded(value, focusPath)
 
     return (
       <div
@@ -141,18 +185,20 @@ export default class RenderItemValue extends React.Component<Props> {
         <div className={styles.inner}>
           {!isGrid && isSortable && <DragHandle className={styles.dragHandle} />}
 
-          <div
+          <FocusArea
             className={styles.preview}
             tabIndex={0}
             onClick={this.handleEditStart}
             onKeyPress={this.handleKeyPress}
+            onFocus={this.handleFocus}
+            ref={this.setFocusArea}
           >
             <Preview
               layout={previewLayout}
               value={value}
               type={this.getMemberType()}
             />
-          </div>
+          </FocusArea>
 
           <div className={styles.functions}>
             {

@@ -18,7 +18,6 @@ import type {Uploader} from '../../sanity/uploads/typedefs'
 import type {Type} from '../../typedefs'
 import type {Path} from '../../typedefs/path'
 import {FocusArea} from '../../FocusArea'
-import {isExpanded} from '../../utils/pathUtils'
 import type {Focusable} from '../../typedefs/Focusable'
 
 function hasKeys(object, exclude = []) {
@@ -111,21 +110,17 @@ export default class ArrayInput extends React.Component<Props, State> {
     if (itemValue && isEmpty(itemValue)) {
       this.removeItem(itemValue)
     }
-    this.props.onFocus([])
-  }
-
-  handleItemEditStart = (item: ItemValue) => {
-    this.setItemFocus(item)
-  }
-
-  setItemFocus(item: ItemValue) {
     this.props.onFocus([{_key: item._key}])
+  }
+
+  setItemExpanded(item: ItemValue) {
+    this.props.onFocus([{_key: item._key}, '*'])
   }
 
   handleDropDownAction = (menuItem: { type: Type }) => {
     const item = createProtoValue(menuItem.type)
     this.append(item)
-    this.setItemFocus(item)
+    this.setItemExpanded(item)
   }
 
   handleAddBtnClick = () => {
@@ -135,7 +130,7 @@ export default class ArrayInput extends React.Component<Props, State> {
       throw new Error('Nothing to add')
     }
     const item = createProtoValue(memberType)
-    this.setItemFocus(item)
+    this.setItemExpanded(item)
     this.append(item)
   }
 
@@ -369,9 +364,6 @@ export default class ArrayInput extends React.Component<Props, State> {
                 focusPath={focusPath}
                 onFocus={onFocus}
                 onBlur={onBlur}
-                onEditStart={this.handleItemEditStart}
-                onEditStop={this.handleItemEditStop}
-                isExpanded={isExpanded(item, focusPath)}
               />
             </Item>
           )

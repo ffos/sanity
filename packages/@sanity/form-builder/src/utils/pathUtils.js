@@ -1,6 +1,11 @@
 // @flow
 import type {Path, PathSegment} from '../typedefs/path'
 
+export function isEqual(path: Path, otherPath: Path) {
+  return path.length === otherPath.length
+    && path.every((segment, i) => isSegmentEqual(segment, otherPath[i]))
+}
+
 export function isSegmentEqual(pathSegment: PathSegment, otherPathSegment: PathSegment) {
   const pathSegmentType = typeof pathSegment
   const otherPathSegmentType = typeof otherPathSegment
@@ -23,10 +28,9 @@ export function hasFocus(focusPath: Path, path: Path): boolean {
 }
 
 export function isExpanded(segment: PathSegment, focusPath: Path): boolean {
-  const [head] = focusPath
-  return isSegmentEqual(segment, head)
+  const [head, ...tail] = focusPath
+  return tail.length > 0 && isSegmentEqual(segment, head)
 }
-
 
 export function startsWith(prefix: Path, path: Path): boolean {
   return prefix.every((segment, i) => isSegmentEqual(segment, path[i]))

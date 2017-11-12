@@ -2,20 +2,9 @@
 import React from 'react'
 import type {Path} from './typedefs/path'
 import PatchEvent from './PatchEvent'
+import generateHelpUrl from '@sanity/generate-help-url'
 import type {Type} from '../../schema/src/sanity/typedefs'
-import {hasFocus, startsWith, trimLeft} from './utils/pathUtils'
-
-function setFocus(input) {
-  if (!input) {
-    console.log('Missing input. Check your refs.')
-    return
-  }
-  if (typeof input.focus === 'function') {
-    input.focus()
-  } else {
-    console.warn('Input component %o has no focus method. Please implement', input)
-  }
-}
+import * as PathUtils from './utils/pathUtils'
 
 type Props = {
   value: any,
@@ -61,14 +50,14 @@ export const FormBuilderInput = class FormBuilderInput extends React.Component<P
 
   componentDidMount() {
     const {focusPath, path} = this.props
-    if (hasFocus(focusPath, path)) {
+    if (PathUtils.hasFocus(focusPath, path)) {
       this.focus()
     }
   }
 
   componentDidUpdate(prevProps) {
-    const hadFocus = hasFocus(prevProps.focusPath, prevProps.path)
-    const hasFocusNow = hasFocus(this.props.focusPath, this.props.path)
+    const hadFocus = PathUtils.hasFocus(prevProps.focusPath, prevProps.path)
+    const hasFocusNow = PathUtils.hasFocus(this.props.focusPath, this.props.path)
     if (!hadFocus && hasFocusNow) {
       this.focus()
     }
@@ -83,7 +72,18 @@ export const FormBuilderInput = class FormBuilderInput extends React.Component<P
   }
 
   focus() {
-    setFocus(this._input)
+    if (!this._input) {
+      // should never happen
+      throw new Error('Attempted to set focus on an invalid input component')
+    }
+    if (typeof this._input.focus !== 'function') {
+      console.warn(
+        'Encountered an input component without a required ".focus()" method. Read more at %s',
+        generateHelpUrl('input-component-missing-required-method')
+      )
+    } else {
+      this._input.focus()
+    }
   }
 
   handleChange = patchEvent => {
@@ -94,13 +94,33 @@ export const FormBuilderInput = class FormBuilderInput extends React.Component<P
     onChange(patchEvent)
   }
 
-  handleFocus = focusPath => {
-    const {path, onFocus} = this.props
-    onFocus([...path, ...focusPath])
+  handleFocus = nextFocusPath => {
+    const {path, onFocus, focusPath} = this.props
+    if (!onFocus) {
+      console.warn(
+        'FormBuilderInput was used without passing an onFocus handler. Read more at %s',
+        generateHelpUrl('input-component-missing-required-method')
+      )
+      return
+    }
+    if (!Array.isArray(nextFocusPath)) { // some inputs may call onFocus with native event
+      onFocus(path)
+      return
+    }
+    if (!PathUtils.isEqual(focusPath, nextFocusPath)) {
+      onFocus([...path, ...nextFocusPath])
+    }
   }
 
   handleBlur = focusPath => {
     const {path, onBlur} = this.props
+    if (!onBlur) {
+      console.warn(
+        'FormBuilderInput was used without passing an onBlur handler. Read more at %s',
+        generateHelpUrl('input-component-missing-required-method')
+      )
+      return
+    }
     onBlur([...path, ...focusPath])
   }
 
@@ -126,20 +146,20 @@ export const FormBuilderInput = class FormBuilderInput extends React.Component<P
 
     const rootProps = isRoot ? {isRoot} : {}
 
-    const childFocusPath = startsWith(path, focusPath) ? trimLeft(path, focusPath) : []
+    const childFocusPath = PathUtils.startsWith(path, focusPath) ? PathUtils.trimLeft(path, focusPath) : []
 
     const isLeaf = childFocusPath.length === 0
     const leafProps = isLeaf ? {} : {focusPath: childFocusPath}
+    //
+    // const debug = false ? content => (
+    //     <div style={{border: '1px dashed green', padding: 4}}>
+    //       {type.title}
+    //       <pre style={{color: 'red'}}>{JSON.stringify(this.props.focusPath)}</pre>
+    //       {content}
+    //     </div>
+    //   ) : content => content
 
-    const debug = false ? (content => (
-        <div style={{border: '1px dashed green', padding: 4}}>
-          {type.title}
-          <pre style={{color: 'red'}}>{JSON.stringify(this.props.focusPath)}</pre>
-          {content}
-        </div>
-      )) : (content => content)
-
-    return debug(
+    return (
       <InputComponent
         {...rest}
         {...rootProps}

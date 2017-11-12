@@ -59,7 +59,7 @@ export default class FocusManager extends React.Component<Props, State> {
   }
 
   handleFocus = path => {
-    // console.log('focus at', path)
+    console.log('focus at', path)
     // this.setState({path})
     document.location.hash = formatPath(path)
   }
