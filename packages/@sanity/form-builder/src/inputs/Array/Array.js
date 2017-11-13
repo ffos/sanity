@@ -19,6 +19,8 @@ import type {Type} from '../../typedefs'
 import type {Path} from '../../typedefs/path'
 import {FocusArea} from '../../FocusArea'
 import type {Focusable} from '../../typedefs/Focusable'
+import {FIRST_META_KEY} from '../../utils/pathUtils'
+
 
 function hasKeys(object, exclude = []) {
   for (const key in object) {
@@ -114,7 +116,7 @@ export default class ArrayInput extends React.Component<Props, State> {
   }
 
   setItemExpanded(item: ItemValue) {
-    this.props.onFocus([{_key: item._key}, '*'])
+    this.props.onFocus([{_key: item._key}, FIRST_META_KEY])
   }
 
   handleDropDownAction = (menuItem: { type: Type }) => {

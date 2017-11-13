@@ -6,6 +6,8 @@ export function isEqual(path: Path, otherPath: Path) {
     && path.every((segment, i) => isSegmentEqual(segment, otherPath[i]))
 }
 
+export const FIRST_META_KEY = '$first'
+
 export function isSegmentEqual(pathSegment: PathSegment, otherPathSegment: PathSegment) {
   const pathSegmentType = typeof pathSegment
   const otherPathSegmentType = typeof otherPathSegment
@@ -24,7 +26,11 @@ export function isSegmentEqual(pathSegment: PathSegment, otherPathSegment: PathS
 export function hasFocus(focusPath: Path, path: Path): boolean {
   const inputLeaf = path[path.length - 1]
   const [head, ...tail] = focusPath
-  return tail.length === 0 && isSegmentEqual(inputLeaf, head)
+  // console.log(focusPath)
+  // if (head === FIRST_META_KEY) {
+  //   debugger
+  // }
+  return (tail.length === 0 || (tail.length === 1 && tail[0] === FIRST_META_KEY)) && isSegmentEqual(inputLeaf, head)
 }
 
 export function isExpanded(segment: PathSegment, focusPath: Path): boolean {

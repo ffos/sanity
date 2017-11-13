@@ -57,8 +57,8 @@ export const FormBuilderInput = class FormBuilderInput extends React.Component<P
 
   componentDidUpdate(prevProps) {
     const hadFocus = PathUtils.hasFocus(prevProps.focusPath, prevProps.path)
-    const hasFocusNow = PathUtils.hasFocus(this.props.focusPath, this.props.path)
-    if (!hadFocus && hasFocusNow) {
+    const hasFocus = PathUtils.hasFocus(this.props.focusPath, this.props.path)
+    if (!hadFocus && hasFocus) {
       this.focus()
     }
   }
@@ -103,12 +103,17 @@ export const FormBuilderInput = class FormBuilderInput extends React.Component<P
       )
       return
     }
+
     if (!Array.isArray(nextFocusPath)) { // some inputs may call onFocus with native event
       onFocus(path)
       return
     }
+    console.log('set focus in', nextFocusPath)
+    console.log('current focus in', focusPath)
     if (!PathUtils.isEqual(focusPath, nextFocusPath)) {
       onFocus([...path, ...nextFocusPath])
+    } else {
+      console.log('skippin')
     }
   }
 

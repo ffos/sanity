@@ -70,7 +70,7 @@ export default class RenderItemValue extends React.Component<Props> {
   }
 
   handleEditStart = event => {
-    this.setFocus(['*'])
+    this.setFocus([PathUtils.FIRST_META_KEY])
   }
 
   handleFocus = () => {
@@ -84,7 +84,7 @@ export default class RenderItemValue extends React.Component<Props> {
   handleKeyPress = (event: SyntheticKeyboardEvent<*>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
-      this.setFocus(['*'])
+      this.setFocus([PathUtils.FIRST_META_KEY])
     }
   }
 
@@ -138,6 +138,7 @@ export default class RenderItemValue extends React.Component<Props> {
         path={[{_key: item._key}]}
       />
     )
+
     // return content
 
     if (options.editModal === 'fullscreen') {
